@@ -1,5 +1,9 @@
 <!--
 更新内容（変更点）
+v1.0.1（2026-10-29）
+  - 設定画面の「全データ削除」がクラウド（Firestore）のデータを消していなかった不具合を修正。
+    クラウドの全記録を削除してから端末内のデータを消す。クラウド削除に失敗した場合は
+    端末内のデータは消さずにエラーを表示する。
 v1.0.0（2026-10-29）スマトリプタン版（頭痛きろく v1.10.0 をベースに作成）
   - 服薬チェックを「スマトリプタン」1種類に変更（PDFの記録一覧では「スマト」と表示）
   - Firebase接続情報を YOUR_～ のプレースホルダに変更（別プロジェクトを使うため）
@@ -63,6 +67,16 @@ window._saveToFirestore = async function(rec) {
   } catch(e) {
     console.warn('Firestore保存エラー:', e);
     return null;
+  }
+};
+window._deleteAllFromFirestore = async function() {
+  try {
+    const snap = await getDocs(collection(db, 'records'));
+    await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'records', d.id))));
+    return true;
+  } catch(e) {
+    console.warn('Firestore全削除エラー:', e);
+    return false;
   }
 };
 window._deleteFromFirestore = async function(fsId) {
@@ -527,7 +541,7 @@ textarea:focus{outline:none;border-color:var(--orange)}
           <div class="card-title"><i class="ti ti-info-circle"></i>このアプリについて</div>
           <div class="settings-row"><div><div class="settings-label">気圧・天気データ</div><div class="settings-sub">Open-Meteo（無料・登録不要）</div></div></div>
           <div class="settings-row"><div><div class="settings-label">データ保存場所</div><div class="settings-sub">Firebase（Googleクラウド・東京）</div></div></div>
-          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.0.0</div></div></div>
+          <div class="settings-row"><div><div class="settings-label">バージョン</div><div class="settings-sub">1.0.1</div></div></div>
         </div>
       </div>
     </div>
@@ -1568,9 +1582,13 @@ function exportCSV() {
   a.click();
 }
 
-function clearData() {
-  if (!confirm(`全 ${records.length} 件の記録を削除しますか？\nこの操作は元に戻せません。`)) return;
+async function clearData() {
+  if (!confirm(`全 ${records.length} 件の記録をクラウドからも削除しますか？\n他の端末の記録も消え、元に戻せません。`)) return;
+  showToast('削除中…');
+  const ok = window._deleteAllFromFirestore ? await window._deleteAllFromFirestore() : false;
+  if (!ok) { showToast('クラウドの削除に失敗しました。通信を確認してください'); return; }
   records=[];
+  window._records=[];
   localStorage.removeItem('hts_records');
   showToast('削除しました');
   updateRecordCount();
