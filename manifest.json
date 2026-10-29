@@ -1,0 +1,16 @@
+{
+  "name": "頭痛きろく",
+  "short_name": "頭痛きろく",
+  "description": "頭痛・服薬・気圧を記録して傾向を把握するアプリ",
+  "start_url": "/headache-pwa-ota/",
+  "scope": "/headache-pwa-ota/",
+  "display": "standalone",
+  "background_color": "#fff8f0",
+  "theme_color": "#e8630a",
+  "lang": "ja",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
